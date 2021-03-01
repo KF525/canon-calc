@@ -1,24 +1,23 @@
+import zio._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
-import zio._
 import zio.interop.catz._
-import cats.Functor
-import cats.effect._
-import cats.syntax._
-import cats.instances._
-import cats.implicits._
-import org.http4s.{EntityDecoder, HttpRoutes}
-import org.http4s.dsl.Http4sDsl
-import org.http4s.circe._
+
+import scala.io.Source
 
 object Routes {
-  
-  def canonRoute[F[_]: Sync] = {
-    val dsl = Http4sDsl[F]
+
+    val dsl = Http4sDsl[Task]
     import dsl._
-    HttpRoutes.of[F]{case GET -> Root / "texts" / textId / "body" =>
-        //https://www.gutenberg.org/files/2701/2701-0.txt
-        Ok(s"ok I got to the route $textId")
+
+    val canonRoute = HttpRoutes.of[Task]{
+      case GET -> Root / "text" / textId  => 
+        val uri: Either[ParseFailure, Uri] = Uri.fromString("https://www.gutenberg.org/files/2701/2701-0.txt")
+//        val baseUri = Uri.uri("https://www.gutenberg.org")
+//        val withPath = baseUri.withPath("/files")
+//        val withQuery = withPath.withQueryParam("hello", "world")
+        val text = Source.fromURL("https://www.gutenberg.org/files/2701/2701-0.txt")
+        //val helloJames = httpClient.expect[String]("http://localhost:8080/hello/James")
+        Ok(text.mkString)
     }
-  }
 }
